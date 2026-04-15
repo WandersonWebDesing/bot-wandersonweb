@@ -1,44 +1,31 @@
-const express = require('express');
-const app = express();
+app.post('/webhook', async (req, res) => {
+    const mensagemCliente = req.body.Body;
+    const numeroWhatsApp = req.body.WaId;
+    const nomeCliente = req.body.ProfileName || 'parceiro';
 
-// 1. CONFIGURAÇÃO DE PARSERS (Essencial para ler o Twilio e JSON)
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+    console.log(`📱 Processando Lead: ${nomeCliente} (${numeroWhatsApp})`);
 
-// 2. CARREGAR VARIÁVEIS DE AMBIENTE
-try {
-    require('dotenv').config();
-} catch (e) {
-    // Silencioso para produção no Render
-}
+    // GATILHO DE NEURODESIGN: Resposta com autoridade e foco na dor
+    const respostaPersuasiva = `
+Olá, ${nomeCliente}! Wanderson aqui. 👋
 
-const HUBSPOT_TOKEN = process.env.HUBSPOT_ACCESS_TOKEN;
+Recebi sua mensagem e já identifiquei que você busca elevar o nível do seu posicionamento digital. 
 
-// 3. VERIFICAÇÃO DO TOKEN
-if (!HUBSPOT_TOKEN) {
-    console.log("⚠️ Aviso: Variável HUBSPOT_ACCESS_TOKEN não encontrada no Render.");
-} else {
-    console.log("✅ Token do HubSpot carregado com sucesso!");
-}
+Muitos projetos falham não por falta de tecnologia, mas por falta de **Rapport** e **Neurodesign**. Hoje, um site que não converte é apenas um cartão de visitas caro. 
 
-// 4. ROTA DE TESTE (Para confirmar que o bot está vivo no navegador)
-app.get('/', (req, res) => {
-    res.send('<h1>Bot WandersonWeb Online</h1><p>O servidor está rodando corretamente.</p>');
-});
+Para eu te entregar uma solução que realmente gere autoridade e feche negócios para você, me diga:
+1️⃣ Qual o seu principal gargalo hoje (vendas, tráfego ou autoridade)?
+2️⃣ O seu design atual comunica confiança ou afasta o seu cliente ideal?
 
-// 5. ROTA DO WEBHOOK (Onde o Twilio entrega as mensagens)
-app.post('/webhook', (req, res) => {
-    // Agora o req.body virá preenchido com os dados do WhatsApp
-    console.log("📱 Mensagem recebida do WhatsApp:", req.body);
-    
-    // Resposta padrão exigida pelo Twilio (Status 200)
-    res.status(200).send('<Response></Response>');
-});
+Aguardo seu retorno para desenharmos essa estratégia. 🚀
+    `;
 
-// 6. INICIALIZAÇÃO DO SERVIDOR (Configuração exata para o Render)
-const PORT = process.env.PORT || 10000;
+    // LÓGICA DE ENVIO (TwiML)
+    // Isso faz o Twilio responder automaticamente no WhatsApp
+    const twimlResponse = `
+    <Response>
+        <Message>${respostaPersuasiva}</Message>
+    </Response>`;
 
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Servidor rodando com sucesso na porta ${PORT}`);
-    console.log(`🔗 Webhook configurado: https://bot-wandersonweb.onrender.com/webhook`);
+    res.status(200).type('text/xml').send(twimlResponse);
 });
