@@ -1,56 +1,71 @@
 const express = require('express');
 const app = express();
 
-// 1. CONFIGURAÇÃO DE ENTRADA DE DADOS
-// Permite que o servidor entenda JSON e o formato que o Twilio envia (urlencoded)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 2. VARIÁVEIS DE AMBIENTE (HubSpot)
 try {
     require('dotenv').config();
-} catch (e) {
-    // Silencioso para produção no Render
-}
+} catch (e) {}
 
 const HUBSPOT_TOKEN = process.env.HUBSPOT_ACCESS_TOKEN;
-console.log(HUBSPOT_TOKEN ? "✅ Token HubSpot: OK" : "⚠️ Token HubSpot: Ausente");
 
-// 3. ROTA DE TESTE (Para abrir no navegador)
 app.get('/', (req, res) => {
-    res.send('Bot WandersonWeb está online e operante!');
+    res.send('<h1>WandersonWeb Strategy Online</h1>');
 });
 
-// 4. WEBHOOK (Rapport e Resposta Automática)
 app.post('/webhook', (req, res) => {
     const nomeCliente = req.body.ProfileName || 'parceiro';
-    const mensagemCorpo = req.body.Body || '';
+    const mensagemCorpo = (req.body.Body || '').toLowerCase();
     
-    console.log(`📱 Mensagem de ${nomeCliente}: ${mensagemCorpo}`);
+    console.log(`📱 Lead: ${nomeCliente} | Mensagem: ${mensagemCorpo}`);
 
-    // Script Estratégico de Neurodesign
-    const respostaPersuasiva = `Olá, ${nomeCliente}! Wanderson aqui. 👋
+    // --- LÓGICA DE PSICOLOGIA E RAPPORT ---
+    let respostaTexto = "";
 
-Recebi sua mensagem e já identifiquei que você busca elevar o nível do seu posicionamento digital. 
+    // Se for a primeira mensagem ou um "oi"
+    if (mensagemCorpo.includes('oi') || mensagemCorpo.includes('ola') || mensagemCorpo.includes('menu')) {
+        respostaTexto = `Olá, ${nomeCliente}! Sou Wanderson, estrategista da **WandersonWeb**. 👋
 
-Muitos projetos falham não por falta de tecnologia, mas por falta de **Rapport** e **Neurodesign**. Hoje, um site que não converte é apenas um cartão de visitas caro. 
+Se você está aqui, é porque não busca apenas um serviço, mas um **posicionamento de alto valor**. No mercado atual, a percepção de autoridade é o que separa quem dá desconto de quem cobra o preço justo.
 
-Para eu te entregar uma solução que realmente gere autoridade e feche negócios, me diga:
-1️⃣ Qual o seu principal gargalo hoje (vendas, tráfego ou autoridade)?
-2️⃣ O seu design atual comunica confiança ou afasta o seu cliente ideal?`;
+Como posso acelerar o seu projeto hoje?
 
-    // Resposta em XML para o Twilio (Obrigatório para o WhatsApp responder)
+1️⃣ **Audiovisual de Elite:** Fotografia, Gravação e Edição de vídeos com narrativa persuasiva.
+2️⃣ **Web Design & Neurodesign:** Sites criados para converter visitantes em clientes.
+3️⃣ **Automação Inteligente:** Criação de Bots (WhatsApp Robot) e Marketing Digital.
+4️⃣ **Nossas Unidades:** Localização das lojas físicas.
+
+*Digite o número da opção desejada.*`;
+    } 
+    // Opção de Localização (Gatilho de Prova Social e Presença Física)
+    else if (mensagemCorpo === '4') {
+        respostaTexto = `Com certeza! Estamos estrategicamente localizados para te atender:
+
+📍 **Unidade Arapoangas:** [Link do Maps]
+📍 **Unidade Feira de Planaltina:** [Link do Maps]
+📍 **Unidade Rodoviária do Plano Piloto:** [Link do Maps]
+
+Qual dessas é mais acessível para agendarmos uma reunião presencial?`;
+    }
+    // Resposta padrão para outras opções
+    else {
+        respostaTexto = `Entendido! Estou processando sua solicitação sobre este serviço. 
+
+Enquanto isso, me diga: qual é o seu maior desafio atual em relação a isso? Ter essa clareza é o primeiro passo para aplicarmos o **Neurodesign** de forma eficaz no seu negócio. 🚀`;
+    }
+
+    // --- RESPOSTA XML PARA O TWILIO ---
     res.header('Content-Type', 'text/xml');
     const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-    <Message>${respostaPersuasiva}</Message>
+    <Message>${respostaTexto}</Message>
 </Response>`;
 
     res.status(200).send(twiml);
 });
 
-// 5. START DO SERVIDOR (Porta dinâmica do Render)
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Servidor rodando na porta ${PORT}`);
+    console.log(`🚀 WandersonWeb operando na porta ${PORT}`);
 });
