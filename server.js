@@ -15,9 +15,10 @@ if (!HUBSPOT_TOKEN) {
 
 // ... seu código de rotas (app.get, app.post) continua aqui ...
 
-// NA PARTE FINAL DO ARQUIVO (Substitua o app.listen antigo por este):
-const PORT = process.env.PORT || 4001;
+// Garante que o PORT seja pego do ambiente ou use 10000 (padrão do Render) se o 4001 falhar
+const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Servidor rodando na porta ${PORT}`);
+    console.log(`🚀 Servidor online na porta ${PORT}`);
+    console.log(`🔗 URL: https://bot-wandersonweb.onrender.com`);
 });
