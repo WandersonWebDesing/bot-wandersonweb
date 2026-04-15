@@ -1,4 +1,12 @@
-"scripts": {
-  "start": "node server.js",
-  "dev": "dotenvx run -- node server.js"
+{
+  "name": "bot-whatsapp",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "dotenvx run -- node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "dotenv": "^16.0.0"
+  }
 }
