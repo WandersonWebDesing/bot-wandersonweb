@@ -15,47 +15,71 @@ app.get('/', (req, res) => {
 });
 
 app.post('/webhook', (req, res) => {
-    const nomeCliente = req.body.ProfileName || 'parceiro';
-    const mensagemCorpo = (req.body.Body || '').toLowerCase();
+    // Captura o nome real do WhatsApp. Se não existir, tratamos como 'futuro parceiro'
+    const nomeCliente = req.body.ProfileName || 'futuro parceiro';
+    const mensagemCorpo = (req.body.Body || '').toLowerCase().trim();
     
-    console.log(`📱 Lead: ${nomeCliente} | Mensagem: ${mensagemCorpo}`);
+    console.log(`📱 Lead Identificado: ${nomeCliente} | Mensagem: ${mensagemCorpo}`);
 
-    // --- LÓGICA DE PSICOLOGIA E RAPPORT ---
     let respostaTexto = "";
 
-    // Se for a primeira mensagem ou um "oi"
-    if (mensagemCorpo.includes('oi') || mensagemCorpo.includes('ola') || mensagemCorpo.includes('menu')) {
-        respostaTexto = `Olá, ${nomeCliente}! Sou Wanderson, estrategista da **WandersonWeb**. 👋
+    // Lógica de Menu e Persuasão
+    if (['oi', 'olá', 'ola', 'menu', 'bom dia', 'boa tarde'].some(saudacao => mensagemCorpo.includes(saudacao))) {
+        respostaTexto = `Prezado(a) *${nomeCliente}*, é um prazer ter você por aqui. Sou o Wanderson. 👋
 
-Se você está aqui, é porque não busca apenas um serviço, mas um **posicionamento de alto valor**. No mercado atual, a percepção de autoridade é o que separa quem dá desconto de quem cobra o preço justo.
+No mercado atual, quem não é visto com autoridade é ignorado. Eu não apenas entrego serviços, eu construo **ativos digitais de alto impacto** usando Neurodesign e Rapport.
 
-Como posso acelerar o seu projeto hoje?
+Como posso elevar o nível do seu negócio hoje? Escolha uma opção:
 
-1️⃣ **Audiovisual de Elite:** Fotografia, Gravação e Edição de vídeos com narrativa persuasiva.
-2️⃣ **Web Design & Neurodesign:** Sites criados para converter visitantes em clientes.
-3️⃣ **Automação Inteligente:** Criação de Bots (WhatsApp Robot) e Marketing Digital.
-4️⃣ **Nossas Unidades:** Localização das lojas físicas.
+1️⃣  *Audiovisual de Elite:* Fotografia, Gravação e Edição de vídeos que vendem por você.
+2️⃣  *Web & Neurodesign:* Sites ultra-rápidos focados em conversão psicológica.
+3️⃣  *Marketing & Automação:* Estratégias digitais e Criação de WhatsApp Robots.
+4️⃣  *Visita Presencial:* Nossas 3 unidades (Arapoangas, Planaltina e Plano Piloto).
 
-*Digite o número da opção desejada.*`;
+*Digite apenas o número desejado para iniciarmos a estratégia.*`;
     } 
-    // Opção de Localização (Gatilho de Prova Social e Presença Física)
+    
+    else if (mensagemCorpo === '1') {
+        respostaTexto = `Excelente escolha, *${nomeCliente}*. Imagens e vídeos de baixa qualidade matam sua autoridade. 📸🎥
+
+Minha entrega audiovisual é focada em narrativa persuasiva. Seja para marcas pessoais ou empresas, criamos o desejo de compra antes mesmo do cliente falar com você. 
+
+Deseja ver meu portfólio ou agendar uma sessão de gravação?`;
+    }
+
+    else if (mensagemCorpo === '2') {
+        respostaTexto = `*${nomeCliente}*, um site sem Neurodesign é apenas um custo. O meu foco é transformar seu site em um vendedor que não dorme. 💻
+
+Aplico gatilhos de autoridade e hierarquia visual para que seu cliente tome a decisão de compra em segundos. 
+
+Quer que eu faça uma análise rápida do seu posicionamento atual?`;
+    }
+
+    else if (mensagemCorpo === '3') {
+        respostaTexto = `A tecnologia deve trabalhar para você, *${nomeCliente}*. 🤖
+
+Com Marketing Digital e WhatsApp Robots, escalamos seu atendimento e suas vendas sem aumentar sua carga de trabalho. É a inteligência artificial a serviço do seu lucro.
+
+Podemos conversar sobre como automatizar seu funil de vendas?`;
+    }
+
     else if (mensagemCorpo === '4') {
-        respostaTexto = `Com certeza! Estamos estrategicamente localizados para te atender:
+        respostaTexto = `Será um prazer receber você, *${nomeCliente}*. A presença física consolida a confiança. 📍
 
-📍 **Unidade Arapoangas:** [Link do Maps]
-📍 **Unidade Feira de Planaltina:** [Link do Maps]
-📍 **Unidade Rodoviária do Plano Piloto:** [Link do Maps]
+Escolha a unidade mais próxima para agendarmos um café:
 
-Qual dessas é mais acessível para agendarmos uma reunião presencial?`;
+📌 *Arapoangas:* [Link do Maps]
+📌 *Feira de Planaltina:* [Link do Maps]
+📌 *Rodoviária do Plano Piloto:* [Link do Maps]
+
+Qual dessas unidades fica melhor para você?`;
     }
-    // Resposta padrão para outras opções
+
     else {
-        respostaTexto = `Entendido! Estou processando sua solicitação sobre este serviço. 
-
-Enquanto isso, me diga: qual é o seu maior desafio atual em relação a isso? Ter essa clareza é o primeiro passo para aplicarmos o **Neurodesign** de forma eficaz no seu negócio. 🚀`;
+        respostaTexto = `*${nomeCliente}*, entendi sua mensagem. Para que eu seja assertivo na sua solução de Neurodesign, digite *MENU* para ver meus serviços ou aguarde um instante que já irei analisar seu caso pessoalmente. 🚀`;
     }
 
-    // --- RESPOSTA XML PARA O TWILIO ---
+    // Resposta XML formatada para o Twilio
     res.header('Content-Type', 'text/xml');
     const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
@@ -67,5 +91,5 @@ Enquanto isso, me diga: qual é o seu maior desafio atual em relação a isso? T
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 WandersonWeb operando na porta ${PORT}`);
+    console.log(`🚀 WandersonWeb Operacional na Porta ${PORT}`);
 });
