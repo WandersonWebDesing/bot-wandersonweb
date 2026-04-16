@@ -1,95 +1,51 @@
 const express = require('express');
+const { Client } = require('@hubspot/api-client'); // Importa HubSpot
 const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-try {
-    require('dotenv').config();
-} catch (e) {}
+// Configuração do HubSpot
+const hubspotClient = new Client({ accessToken: process.env.HUBSPOT_ACCESS_TOKEN });
 
-const HUBSPOT_TOKEN = process.env.HUBSPOT_ACCESS_TOKEN;
+app.post('/webhook', async (req, res) => {
+    try {
+        const nomeCliente = req.body.ProfileName || 'Lead WhatsApp';
+        const numeroWhatsApp = req.body.WaId; // Ex: 556199788904
+        const mensagemCorpo = (req.body.Body || '').toLowerCase().trim();
 
-app.get('/', (req, res) => {
-    res.send('<h1>WandersonWeb Strategy Online</h1>');
-});
+        console.log(`📱 Processando: ${nomeCliente} - ${numeroWhatsApp}`);
 
-app.post('/webhook', (req, res) => {
-    // Captura o nome real do WhatsApp. Se não existir, tratamos como 'futuro parceiro'
-    const nomeCliente = req.body.ProfileName || 'futuro parceiro';
-    const mensagemCorpo = (req.body.Body || '').toLowerCase().trim();
-    
-    console.log(`📱 Lead Identificado: ${nomeCliente} | Mensagem: ${mensagemCorpo}`);
+        // --- 1. SALVAR NO HUBSPOT (Opcional: Apenas se houver Token) ---
+        if (process.env.HUBSPOT_ACCESS_TOKEN) {
+            try {
+                await hubspotClient.crm.contacts.basicApi.create({
+                    properties: {
+                        firstname: nomeCliente,
+                        phone: numeroWhatsApp,
+                        hs_content_membership_notes: `Interagiu com o Bot: Opção ${mensagemCorpo}`
+                    }
+                });
+                console.log("✅ Lead salvo no HubSpot");
+            } catch (err) {
+                console.error("❌ Erro HubSpot:", err.message);
+            }
+        }
 
-    let respostaTexto = "";
+        // --- 2. LÓGICA DE RESPOSTA (O seu Menu) ---
+        let respostaTexto = `Olá, *${nomeCliente}*! Escolha uma opção:\n\n1️⃣ Audiovisual\n2️⃣ Sites\n3️⃣ Robôs\n4️⃣ Lojas`;
 
-    // Lógica de Menu e Persuasão
-    if (['oi', 'olá', 'ola', 'menu', 'bom dia', 'boa tarde'].some(saudacao => mensagemCorpo.includes(saudacao))) {
-        respostaTexto = `Prezado(a) *${nomeCliente}*, é um prazer ter você por aqui. Sou o Wanderson. 👋
+        if (mensagemCorpo === '1') respostaTexto = `*${nomeCliente}*, vamos elevar seu audiovisual...`;
+        // ... (resto do seu menu aqui)
 
-No mercado atual, quem não é visto com autoridade é ignorado. Eu não apenas entrego serviços, eu construo **ativos digitais de alto impacto** usando Neurodesign e Rapport.
+        res.header('Content-Type', 'text/xml');
+        res.send(`<?xml version="1.0" encoding="UTF-8"?><Response><Message>${respostaTexto}</Message></Response>`);
 
-Como posso elevar o nível do seu negócio hoje? Escolha uma opção:
-
-1️⃣  *Audiovisual de Elite:* Fotografia, Gravação e Edição de vídeos que vendem por você.
-2️⃣  *Web & Neurodesign:* Sites ultra-rápidos focados em conversão psicológica.
-3️⃣  *Marketing & Automação:* Estratégias digitais e Criação de WhatsApp Robots.
-4️⃣  *Visita Presencial:* Nossas 3 unidades (Arapoangas, Planaltina e Plano Piloto).
-
-*Digite apenas o número desejado para iniciarmos a estratégia.*`;
-    } 
-    
-    else if (mensagemCorpo === '1') {
-        respostaTexto = `Excelente escolha, *${nomeCliente}*. Imagens e vídeos de baixa qualidade matam sua autoridade. 📸🎥
-
-Minha entrega audiovisual é focada em narrativa persuasiva. Seja para marcas pessoais ou empresas, criamos o desejo de compra antes mesmo do cliente falar com você. 
-
-Deseja ver meu portfólio ou agendar uma sessão de gravação?`;
+    } catch (error) {
+        console.error("❌ Erro Geral:", error);
+        res.status(500).send("Erro");
     }
-
-    else if (mensagemCorpo === '2') {
-        respostaTexto = `*${nomeCliente}*, um site sem Neurodesign é apenas um custo. O meu foco é transformar seu site em um vendedor que não dorme. 💻
-
-Aplico gatilhos de autoridade e hierarquia visual para que seu cliente tome a decisão de compra em segundos. 
-
-Quer que eu faça uma análise rápida do seu posicionamento atual?`;
-    }
-
-    else if (mensagemCorpo === '3') {
-        respostaTexto = `A tecnologia deve trabalhar para você, *${nomeCliente}*. 🤖
-
-Com Marketing Digital e WhatsApp Robots, escalamos seu atendimento e suas vendas sem aumentar sua carga de trabalho. É a inteligência artificial a serviço do seu lucro.
-
-Podemos conversar sobre como automatizar seu funil de vendas?`;
-    }
-
-    else if (mensagemCorpo === '4') {
-        respostaTexto = `Será um prazer receber você, *${nomeCliente}*. A presença física consolida a confiança. 📍
-
-Escolha a unidade mais próxima para agendarmos um café:
-
-📌 *Arapoangas:* [Link do Maps]
-📌 *Feira de Planaltina:* [Link do Maps]
-📌 *Rodoviária do Plano Piloto:* [Link do Maps]
-
-Qual dessas unidades fica melhor para você?`;
-    }
-
-    else {
-        respostaTexto = `*${nomeCliente}*, entendi sua mensagem. Para que eu seja assertivo na sua solução de Neurodesign, digite *MENU* para ver meus serviços ou aguarde um instante que já irei analisar seu caso pessoalmente. 🚀`;
-    }
-
-    // Resposta XML formatada para o Twilio
-    res.header('Content-Type', 'text/xml');
-    const twiml = `<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-    <Message>${respostaTexto}</Message>
-</Response>`;
-
-    res.status(200).send(twiml);
 });
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 WandersonWeb Operacional na Porta ${PORT}`);
-});
+app.listen(PORT, '0.0.0.0', () => console.log(`🚀 WandersonWeb Ativo na porta ${PORT}`));
